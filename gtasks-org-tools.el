@@ -1,7 +1,18 @@
 ;;; gtasks-org-tools.el --- Google Tasks Import and Export -*- lexical-binding: t; -*-
-;;; Commentary:
 ;;
 ;; Import Google Tasks into Org and export Org entries to Google Tasks.
+;;
+;; Author: thndrbrrr@gmail.com
+;; Maintainer: thndrbrrr@gmail.com
+;; Version: 0.1.0
+;; Package-Requires: ((emacs "27.1"))
+;; URL: https://github.com/thndrbrrr/gtasks-org-tools
+;; Keywords: org, convenience, tools, google, tasks, sync
+;;
+;;; Commentary:
+;;
+;; Import/export to bridge Google Tasks and Org files.  Provides commands
+;; to pull tasks into Org and to push tagged Org entries to Google Tasks.
 ;;
 ;; Copyright (C) 2025 thndrbrrr@gmail.com
 ;;
