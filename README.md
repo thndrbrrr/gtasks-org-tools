@@ -1,12 +1,12 @@
 # gtasks-org-tools.el
 
-`gtasks-org-tools.el` allows you to import Google Tasks into Org and export tagged Org entries to Google Tasks.
+`gtasks-org-tools.el` helps you capture Google Tasks in Org and publish selected (tagged) Org entries back to Google Tasks.
 
-**Note:** This is not the same "syncing" between the two systems. Making changes in Org will not affect the corresponding Google Tasks, and completing or deleting Google Tasks will not affect Org entries.
+**Note:** This package intentionally avoids two-way synchronization. Edits in Org do not update Google Tasks, and changes inside Google Tasks do not alter existing Org headlines.
 
-The idea is for data to flow only one way, using Google Tasks on the road. Treat the "My Tasks" tasklist as an inbox, which you can then import and add to your `inbox.org`. Similar idea for exporting: treat the exported lists as throwaways.
+The idea is to treat your Google tasklists (e.g. "My Tasks") as temporary inboxes for collecting items on the go. Import them into something like `inbox.org`, then process them in Org. When exporting Org entries with certain tags consider those Google tasklists like disposable snapshots.
 
-[gtasks.el](https://github.com/thndrbrrr/gtasks) is used for interacting with Google Tasks API.
+[gtasks.el](https://github.com/thndrbrrr/gtasks) provides the Google Tasks API bindings used by this package.
 
 ## Installation
 
@@ -21,26 +21,40 @@ If you use `use-package`, you can load it lazily:
 
 ```elisp
 (use-package gtasks-org-tools
-  :load-path "~/src/gtasks-org-tools")
+  :load-path "/path/to/gtasks-org-tools")
 ```
 
 ## Usage
 
-Import tasks from a Google tasklist and append to an Org file:
+### Import tasks
+
+Import from a Google tasklist and append to an Org file:
 
 ``` elisp
 (gtasks-org-tools-pull (gtasks-tasklist-id-by-title "My Tasks")
-			 (concat my/org-directory "/inbox.org")
-			 'complete)
+			           (concat my/org-directory "/inbox.org")
+			           'complete)
 ```
 
-Export tagged Org entries to Google tasklists of the same name:
+`gtasks-org-tools-pull` accepts an optional third argument that determines how the source Google tasks are treated after they are written to the Org file:
+
+* Omit the argument to leave the remote tasks untouched.
+* `'complete` to mark the imported Google tasks as completed.
+* `'delete` to remove the imported Google tasks.
+
+`gtasks-org-tools-after-append-hook` is invoked after entries have been appended and saved.
+
+### Export tagged Org entries
+
+You can provide a list of tags to export. `org-sync-tools` will create Google tasklists of the same name if they don't exist. During export, entries whose deadlines or timestamps fall before today are filtered out so that overdue items stay in Org:
 
 ```elisp
 (gtasks-org-tools-push-tags '("@ERRAND" "@NYC" "Shopping"))
 ```
 
-The end-to-end setup for to setup functions for importing and exporting could look like this:
+### Configuration in `init.el`
+
+An end-to-end setup for defining helper commands in your `init.el` for import and export could look like this:
 
 ``` elisp
 (add-to-list 'load-path "/path/to/gtasks")
@@ -66,24 +80,23 @@ The end-to-end setup for to setup functions for importing and exporting could lo
   "Import tasks from Google's 'My Tasks' list and append them to inbox.org.
 Mark all imported entries as completed."
   (interactive)
-  (gtasks-org-tools-pull "sOmEtAsKlIsTId"  ;; My Tasks
+  (gtasks-org-tools-pull "sOmElOnGtAsKlIsTId"  ;; My Tasks
 	                     (concat my/org-directory "/inbox.org")
 			             'complete))
 
 (defun my/export-tags-to-gtasks ()
-  "Export tagged org entries to Google Tasks."
+  "Export tagged Org entries to Google Tasks."
   (interactive)
   (gtasks-org-tools-push-tags '("@ERRAND" "@NYC" "Shopping")))
-
 ```
 
 ## Customization
 
-All package options live under `M-x customize-group RET gtasks-org-tools RET`.
+All package options live under `M-x customize-group RET gtasks-org-tools RET`. You can also set them in your init file before requiring `gtasks-org-tools.el`:
 
-TODO
-
-Adjust these variables either through Customize or by setting them in your init file prior to requiring `gtasks-org-tools.el`.
+* **`gtasks-org-tools-default-todo`** – Todo keyword applied to imported tasks that are still open.
+* **`gtasks-org-tools-done-todo`** – Todo keyword used for imported tasks that are already completed.
+* **`gtasks-org-tools-after-append-hook`** – Hook invoked after entries are appended and saved.
 
 ## License
 
