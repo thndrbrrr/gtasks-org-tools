@@ -76,6 +76,18 @@ Adds GTASKS_TASKLIST_ID and GTASKS_TASK_ID in a property drawer."
         (save-buffer)
         t))))
 
+(defun gtasks-org-tools--rfc3339-date-midnight (date)
+  "Convert DATE into an RFC3339 midnight timestamp.
+
+Arguments:
+- DATE: String formatted as \"YYYY-MM-DD\".
+
+Returns:
+- RFC3339 timestamp string or nil when DATE is invalid."
+  (when (and (stringp date)
+             (string-match-p "\\`[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\'" date))
+    (format "%sT00:00:00.000Z" date)))
+
 (defun gtasks-org-tools--org-ts->yyyy-mm-dd (s)
   "Return YYYY-MM-DD from an Org timestamp string S, or nil."
   (when (and s (stringp s)
@@ -147,19 +159,25 @@ The keys in the property list are :title, :todo, :due, :body, and :props."
           :body body
           :props props-plist)))
 
+(defun gtasks-org-tools--org-plist-to-gtask-plist (p)
+  "Convert an org entry plist P to a gtask plist for calling the API."
+  (list :title (plist-get p :title)
+	:notes (plist-get p :body)
+	:due (gtasks-org-tools--rfc3339-date-midnight (plist-get p :due))))
+
 (defun gtasks-org-tools--find-tagged-entries (tag)
   "Find org entries that match TAG.
 
 Org entries are filtered such that they don't have a past due date such as
-DEADLINEs or timestamps.
-
-Each element is a plist produced by `gtasks-org-tools--org-entry-to-plist'."
+DEADLINEs or timestamps."
   (org-ql-select (org-agenda-files)
     `(and (tags ,tag)
           (not (deadline :to -1))
           (not (ts-active :to -1))
           (not (ts-inactive :to -1)))
-    :action #'gtasks-org-tools--org-entry-to-plist))
+    :action (lambda ()
+	      (gtasks-org-tools--org-plist-to-gtask-plist
+	       (gtasks-org-tools--org-entry-to-plist)))))
 
 (defun gtasks-org-tools--tasklist-ensure (title)
   "Return tasklist id for TITLE, creating the list if necessary."
