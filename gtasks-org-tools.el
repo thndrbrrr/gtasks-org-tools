@@ -4,7 +4,7 @@
 ;;
 ;; Author: thndrbrrr@gmail.com
 ;; Maintainer: thndrbrrr@gmail.com
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Package-Requires: ((emacs "27.1"))
 ;; URL: https://github.com/thndrbrrr/gtasks-org-tools
 ;; Keywords: org, convenience, tools, google, tasks, sync
@@ -33,7 +33,7 @@
 
 (require 'org)
 (require 'org-ql)
-(require 'cl-lib) ;; TODO: used where? remove dependency
+(require 'cl-lib)
 (require 'subr-x) ;; string-trim -- TODO: only used once ... remove dependency
 (require 'gtasks)
 
@@ -205,8 +205,8 @@ DEADLINEs or timestamps."
 
 (defun gtasks-org-tools--tasklist-ensure (title)
   "Return tasklist id for TITLE, creating the list if necessary."
-  (or (gtasks-tasklist-id-by-title title)
-      (plist-get (gtasks-tasklist-insert `(:title ,title)) :id)))
+  (or (gtasks-list-id-by-title title)
+      (plist-get (gtasks-list-insert `(:title ,title)) :id)))
 
 (defun gtasks-org-tools-pull (tasklist-id file &rest post-import-action)
   "Fetch tasks for TASKLIST-ID, append to FILE, and optionally post-process them.
@@ -222,7 +222,7 @@ Returns t if entries were successfully appended."
   (let* ((action (car post-import-action)))
     (unless (memq action '(nil complete delete))
       (user-error "Invalid post-import-action: %S (expected nil, 'complete, or 'delete)" action))
-    (let ((tasklist (gtasks-tasklist-get tasklist-id)))
+    (let ((tasklist (gtasks-list-get tasklist-id)))
       (when tasklist
         (let* ((tasks   (plist-get (gtasks-task-list tasklist-id) :items))
                (entries (mapcar (lambda (tsk)
